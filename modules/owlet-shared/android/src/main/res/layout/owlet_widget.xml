@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/owlet_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/owlet_widget_bg">
+
+    <!-- 풀밭 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+        android:layout_gravity="bottom"
+        android:background="#6BBF59" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:padding="6dp"
+        android:text="☁️"
+        android:textSize="20sp" />
+
+    <!-- 새: 갱신 때마다 padding을 바꿔 위치/포즈 변화 -->
+    <FrameLayout
+        android:id="@+id/owlet_bird_box"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <TextView
+            android:id="@+id/owlet_bird"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="44sp" />
+        <TextView
+            android:id="@+id/owlet_letter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="✉️"
+            android:textSize="22sp"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <!-- 안 읽은 편지 수 배지 -->
+    <TextView
+        android:id="@+id/owlet_badge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_margin="8dp"
+        android:background="@drawable/owlet_badge_bg"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="2dp"
+        android:paddingBottom="2dp"
+        android:textColor="#FFFFFF"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+</FrameLayout>
