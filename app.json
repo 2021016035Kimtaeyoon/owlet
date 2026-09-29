@@ -27,6 +27,10 @@
     },
     "android": {
       "package": "com.owlet.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
     }
   }
 }
