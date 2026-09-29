@@ -3,11 +3,13 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Character, RARITY_LABEL } from '../src/data/characters';
 import { CONFIG } from '../src/data/config';
+import { CONFIG2 } from '../src/data/config';
+import { showRewardedAd } from '../src/native/ads';
 import { useStore } from '../src/state/store';
 
 export default function IncubatorScreen() {
   const router = useRouter();
-  const { eggs, incubatorStartedAt, startIncubation, hatch, ownedIds } = useStore();
+  const { eggs, incubatorStartedAt, startIncubation, hatch, ownedIds, coins, spendCoins, finishIncubation } = useStore();
   const [now, setNow] = useState(Date.now());
   const [result, setResult] = useState<{ c: Character; isNew: boolean } | null>(null);
 
@@ -40,6 +42,13 @@ export default function IncubatorScreen() {
           <Text style={styles.big}>{ready ? '🐣' : '🥚'}</Text>
           <Text style={styles.sub}>{ready ? '부화할 준비가 됐어요!' : `남은 시간 ${Math.ceil(remain / 1000)}초`}</Text>
           {ready && <Btn label="부화시키기" onPress={doHatch} />}
+          {!ready && (
+            <>
+              <Btn label={`🪙 ${CONFIG2.shop.instantHatchPrice}로 바로 부화`} onPress={() => { if (spendCoins(CONFIG2.shop.instantHatchPrice)) finishIncubation(); }} />
+              <Btn label="📺 광고 보고 바로 부화 (모의)" onPress={async () => { if (await showRewardedAd()) finishIncubation(); }} />
+              <Text style={styles.sub}>보유 코인 {coins}</Text>
+            </>
+          )}
         </>
       ) : (
         <>

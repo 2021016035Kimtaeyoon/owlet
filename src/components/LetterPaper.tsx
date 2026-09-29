@@ -1,11 +1,13 @@
 import React from 'react';
 import { Image, StyleSheet, Text, TextInput, View } from 'react-native';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { LetterTemplate } from '../data/templates';
 
 interface Props {
   template: LetterTemplate;
   text: string;
   imageUri?: string;
+  videoUri?: string;
   editable?: boolean;
   onChangeText?: (t: string) => void;
   maxLength?: number;
@@ -13,7 +15,7 @@ interface Props {
 }
 
 // 편지지 양식 렌더링: 새 양식은 templates.ts에 데이터만 추가하면 된다
-export function LetterPaper({ template, text, imageUri, editable, onChangeText, maxLength, header }: Props) {
+export function LetterPaper({ template, text, imageUri, videoUri, editable, onChangeText, maxLength, header }: Props) {
   const spots = [
     { top: 8, left: 10 }, { top: 10, right: 12 }, { bottom: 10, left: 14 }, { bottom: 8, right: 10 }, { top: '45%', right: 6 },
   ] as const;
@@ -40,8 +42,14 @@ export function LetterPaper({ template, text, imageUri, editable, onChangeText, 
         <Text style={[styles.text, { color: template.textColor }]}>{text}</Text>
       )}
       {imageUri ? <Image source={{ uri: imageUri }} style={styles.image} /> : null}
+      {videoUri ? <LetterVideo uri={videoUri} /> : null}
     </View>
   );
+}
+
+function LetterVideo({ uri }: { uri: string }) {
+  const player = useVideoPlayer(uri, (p) => { p.loop = false; });
+  return <VideoView player={player} style={styles.image} nativeControls contentFit="contain" />;
 }
 
 const styles = StyleSheet.create({

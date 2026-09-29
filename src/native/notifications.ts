@@ -28,12 +28,16 @@ export async function ensureNotificationPermission(): Promise<boolean> {
 }
 
 /** 답장 도착 시각에 로컬 알림 예약. 앱이 꺼져 있어도 OS가 발송한다. */
-export async function scheduleLetterNotification(friendName: string, at: number): Promise<void> {
+export const scheduleLetterNotification = (friendName: string, at: number) =>
+  scheduleNotification('편지가 도착했어요 ✉️', `${friendName}에게서 답장이 왔어요`, at);
+
+/** 지정 시각에 로컬 알림 예약 (모험 귀환, 부화 완료 등에도 사용) */
+export async function scheduleNotification(title: string, body: string, at: number): Promise<void> {
   try {
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: '편지가 도착했어요 ✉️',
-        body: `${friendName}에게서 답장이 왔어요`,
+        title,
+        body,
         data: { url: 'owlet://open' },
       },
       trigger: {

@@ -5,7 +5,7 @@ import { canDrawOverlays } from '../../src/native/overlay';
 import { ensureNotificationPermission } from '../../src/native/notifications';
 import { GameState, useStore } from '../../src/state/store';
 
-type BoolKey = 'widgetEnabled' | 'overlayEnabled' | 'overlayMotion' | 'notificationsEnabled';
+type BoolKey = 'widgetEnabled' | 'overlayEnabled' | 'overlayMotion' | 'notificationsEnabled' | 'nearbyEnabled';
 
 export default function SettingsScreen() {
   const store = useStore();
@@ -36,6 +36,14 @@ export default function SettingsScreen() {
           <Row k="overlayMotion" label="오버레이 움직임" desc="오버레이의 새가 화면 가장자리를 돌아다녀요" />
         </>
       )}
+      <Row k="nearbyEnabled" label="주변 사용자에게 보내기" desc="허용하면 친구가 아닌 주변 사용자에게도 편지를 보낼 수 있어요 (지금은 예시 사용자)" />
+      <View style={styles.row}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.label}>그래픽 종류</Text>
+          <Text style={styles.desc}>{store.graphicStyle === 'pixel' ? '도트(픽셀)' : '일반(이모지)'}</Text>
+        </View>
+        <Switch value={store.graphicStyle === 'pixel'} onValueChange={(v) => store.update({ graphicStyle: v ? 'pixel' : 'emoji' })} />
+      </View>
       <Row k="notificationsEnabled" label="알림" desc="새를 숨기거나 앱을 꺼도 편지가 오면 알려줘요" />
       <Text style={styles.note}>위젯/오버레이 기능은 development build에서만 동작해요.</Text>
     </ScrollView>

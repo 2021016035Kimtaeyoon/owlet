@@ -19,7 +19,8 @@ export function toExternalState(s: GameState): ExternalState {
     mainId: s.mainId,
     mainEmoji: getCharacter(s.mainId).emoji,
     unreadCount: s.letters.filter((l) => l.direction === 'received' && !l.read).length,
-    birdMode: s.birdMode,
+    // 모험 중에는 새가 자리를 비운 상태로 보이게 한다
+    birdMode: s.adventure ? 'hidden' : s.birdMode,
     widgetEnabled: s.widgetEnabled,
     overlayEnabled: s.overlayEnabled,
     overlayMotion: s.overlayMotion,

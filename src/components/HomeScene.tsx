@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { THEMES, getDecor } from '../data/items';
 
 export interface Point { x: number; y: number }
 
@@ -7,25 +8,30 @@ export interface Point { x: number; y: number }
 export const getNestPos = (w: number, h: number): Point => ({ x: w * 0.72, y: h * 0.5 });
 
 // 하늘 / 나무 / 둥지 / 풀밭을 단순한 도형과 이모지로 표현
-export function HomeScene({ width, height }: { width: number; height: number }) {
+export function HomeScene({ width, height, backgroundId = 'bg-day', nestId = 'nest-basic' }: { width: number; height: number; backgroundId?: string; nestId?: string }) {
+  const theme = THEMES[backgroundId] ?? THEMES['bg-day'];
+  const nestEmoji = getDecor(nestId)?.emoji ?? '🪹';
   const nest = getNestPos(width, height);
   const grassTop = height * 0.8;
   return (
-    <View style={[StyleSheet.absoluteFill, { backgroundColor: '#9BD7F5' }]} pointerEvents="none">
-      <View style={[styles.sky2, { height: height * 0.35 }]} />
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.sky }]} pointerEvents="none">
+      <View style={[styles.sky2, { height: height * 0.35, backgroundColor: theme.sky2 }]} />
       <Text style={[styles.cloud, { top: height * 0.08, left: width * 0.1 }]}>☁️</Text>
       <Text style={[styles.cloud, { top: height * 0.18, left: width * 0.55, fontSize: 40 }]}>☁️</Text>
-      <Text style={[styles.sun, { top: height * 0.05, right: 20 }]}>☀️</Text>
+      <Text style={[styles.sun, { top: height * 0.05, right: 20 }]}>{theme.sun}</Text>
+      {theme.snow && [0.1, 0.3, 0.5, 0.7, 0.9].map((f, i) => (
+        <Text key={i} style={[styles.cloud, { top: height * (0.12 + (i % 3) * 0.18), left: width * f, fontSize: 18 }]}>❄️</Text>
+      ))}
       {/* 나무 줄기 + 잎 */}
       <View style={[styles.trunk, { left: nest.x - 18, top: nest.y, height: grassTop - nest.y + 10 }]} />
-      <View style={[styles.leaves, { left: nest.x - 90, top: nest.y - 190 }]} />
-      <View style={[styles.leaves, { left: nest.x - 40, top: nest.y - 150, width: 150, height: 150, opacity: 0.9 }]} />
+      <View style={[styles.leaves, { left: nest.x - 90, top: nest.y - 190, backgroundColor: theme.leaves }]} />
+      <View style={[styles.leaves, { left: nest.x - 40, top: nest.y - 150, width: 150, height: 150, opacity: 0.9, backgroundColor: theme.leaves }]} />
       {/* 둥지 */}
       <View style={[styles.nest, { left: nest.x - 40, top: nest.y + 12 }]}>
-        <Text style={styles.nestText}>🪹</Text>
+        <Text style={styles.nestText}>{nestEmoji}</Text>
       </View>
       {/* 풀밭 */}
-      <View style={[styles.grass, { top: grassTop, height: height - grassTop }]} />
+      <View style={[styles.grass, { top: grassTop, height: height - grassTop, backgroundColor: theme.grass }]} />
       <Text style={[styles.deco, { top: grassTop - 14, left: width * 0.08 }]}>🌷</Text>
       <Text style={[styles.deco, { top: grassTop - 6, left: width * 0.3 }]}>🌼</Text>
       <Text style={[styles.deco, { top: grassTop + 20, left: width * 0.5 }]}>🍄</Text>

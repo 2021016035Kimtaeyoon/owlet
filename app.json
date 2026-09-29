@@ -10,6 +10,12 @@
     "plugins": [
       "expo-router",
       "expo-notifications",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "친구의 QR 코드를 스캔하려면 카메라가 필요해요"
+        }
+      ],
       "./plugins/withOwletNative",
       "@bacons/apple-targets"
     ],

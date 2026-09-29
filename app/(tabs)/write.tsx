@@ -6,18 +6,20 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from '
 import { LetterPaper } from '../../src/components/LetterPaper';
 import { getCharacter } from '../../src/data/characters';
 import { CONFIG } from '../../src/data/config';
-import { FRIENDS, TEMPLATES, getTemplate } from '../../src/data/templates';
+import { NEARBY, TEMPLATES, getTemplate } from '../../src/data/templates';
 import { useStore } from '../../src/state/store';
 
 const FLY_MS = 1400;
 
 export default function WriteScreen() {
   const router = useRouter();
-  const { mainId, sendLetter } = useStore();
-  const [friendId, setFriendId] = useState(FRIENDS[0].id);
+  const { mainId, sendLetter, friends, nearbyEnabled } = useStore();
+  const recipients = nearbyEnabled ? [...friends, ...NEARBY] : friends;
+  const [friendId, setFriendId] = useState('f1');
   const [templateId, setTemplateId] = useState(TEMPLATES[0].id);
   const [text, setText] = useState('');
   const [imageUri, setImageUri] = useState<string>();
+  const [videoUri, setVideoUri] = useState<string>();
   const [sending, setSending] = useState(false);
   const fly = useSharedValue(0);
   const { width, height } = Dimensions.get('window');
@@ -27,9 +29,15 @@ export default function WriteScreen() {
     if (!res.canceled) setImageUri(res.assets[0].uri);
   };
 
+  const pickVideo = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['videos'], videoMaxDuration: 30 });
+    if (!res.canceled) { setVideoUri(res.assets[0].uri); setTemplateId('film'); }
+  };
+
   const send = () => {
-    if (!text.trim() && !imageUri) return;
-    sendLetter({ friendId, templateId, text: text.trim(), imageUri });
+    if (!text.trim() && !imageUri && !videoUri) return;
+    const to = recipients.some((f) => f.id === friendId) ? friendId : recipients[0].id;
+    sendLetter({ friendId: to, templateId, text: text.trim(), imageUri, videoUri });
     setSending(true);
     fly.value = 0;
     fly.value = withTiming(1, { duration: FLY_MS, easing: Easing.in(Easing.quad) });
@@ -37,6 +45,7 @@ export default function WriteScreen() {
       setSending(false);
       setText('');
       setImageUri(undefined);
+      setVideoUri(undefined);
       router.navigate('/');
     }, FLY_MS + 100);
   };
@@ -56,8 +65,8 @@ export default function WriteScreen() {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.label}>받는 친구</Text>
         <View style={styles.row}>
-          {FRIENDS.map((f) => (
-            <Chip key={f.id} on={f.id === friendId} label={`${f.emoji} ${f.name}`} onPress={() => setFriendId(f.id)} />
+          {recipients.map((f) => (
+            <Chip key={f.id} on={f.id === friendId} label={`${f.emoji} ${f.name}${f.nearby ? ' 📡' : ''}`} onPress={() => setFriendId(f.id)} />
           ))}
         </View>
         <Text style={styles.label}>편지지</Text>
@@ -70,6 +79,7 @@ export default function WriteScreen() {
           template={getTemplate(templateId)}
           text={text}
           imageUri={imageUri}
+          videoUri={videoUri}
           editable
           onChangeText={setText}
           maxLength={CONFIG.letter.maxLength}
@@ -77,6 +87,8 @@ export default function WriteScreen() {
         <View style={styles.row}>
           <Chip on={!!imageUri} label={imageUri ? '📷 사진 바꾸기' : '📷 사진 첨부'} onPress={pickImage} />
           {imageUri && <Chip on={false} label="✕ 사진 빼기" onPress={() => setImageUri(undefined)} />}
+          <Chip on={!!videoUri} label={videoUri ? '🎞️ 동영상 바꾸기' : '🎞️ 동영상 첨부'} onPress={pickVideo} />
+          {videoUri && <Chip on={false} label="✕ 동영상 빼기" onPress={() => setVideoUri(undefined)} />}
         </View>
         <Pressable style={[styles.send, sending && { opacity: 0.5 }]} onPress={send} disabled={sending}>
           <Text style={styles.sendText}>🕊️ 보내기</Text>

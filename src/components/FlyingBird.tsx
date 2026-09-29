@@ -23,13 +23,14 @@ interface Props {
   height: number;
   nest: Point;
   holdingLetter?: boolean;
+  accessoryId?: string;
   onLongPress: () => void;
   onTap: () => void;
 }
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
-export function FlyingBird({ character, mode, width, height, nest, holdingLetter, onLongPress, onTap }: Props) {
+export function FlyingBird({ character, mode, width, height, nest, holdingLetter, accessoryId, onLongPress, onTap }: Props) {
   const size = CONFIG.wander.birdSize;
   const x = useSharedValue(width / 2);
   const y = useSharedValue(height * 0.3);
@@ -109,7 +110,7 @@ export function FlyingBird({ character, mode, width, height, nest, holdingLetter
   return (
     <GestureDetector gesture={gesture}>
       <Animated.View style={[styles.bird, { width: size, height: size }, style]}>
-        <BirdSprite character={character} size={size * 0.85} holdingLetter={holdingLetter} />
+        <BirdSprite character={character} size={size * 0.85} holdingLetter={holdingLetter} accessoryId={accessoryId} />
       </Animated.View>
     </GestureDetector>
   );

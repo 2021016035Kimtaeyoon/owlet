@@ -1,12 +1,11 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { FRIENDS } from '../../src/data/templates';
-import { useStore } from '../../src/state/store';
+import { findFriend, useStore } from '../../src/state/store';
 
 export default function InboxScreen() {
   const router = useRouter();
-  const { letters } = useStore();
+  const { letters, friends } = useStore();
   return (
     <FlatList
       style={styles.root}
@@ -14,7 +13,7 @@ export default function InboxScreen() {
       keyExtractor={(l) => l.id}
       ListEmptyComponent={<Text style={styles.empty}>아직 편지가 없어요. 편지를 써보세요!</Text>}
       renderItem={({ item: l }) => {
-        const f = FRIENDS.find((x) => x.id === l.friendId) ?? FRIENDS[0];
+        const f = findFriend(friends, l.friendId);
         const unread = l.direction === 'received' && !l.read;
         return (
           <Pressable style={styles.item} onPress={() => router.push(`/letter/${l.id}`)}>
@@ -23,7 +22,7 @@ export default function InboxScreen() {
               <Text style={styles.name}>
                 {l.direction === 'sent' ? `→ ${f.name}에게` : `← ${f.name}에게서`} {unread ? '🔴' : ''}
               </Text>
-              <Text numberOfLines={1} style={styles.preview}>{l.text || '(사진)'}</Text>
+              <Text numberOfLines={1} style={styles.preview}>{l.text || (l.videoUri ? '(동영상)' : '(사진)')}</Text>
             </View>
             <Text style={styles.time}>{new Date(l.createdAt).toLocaleTimeString().slice(0, 5)}</Text>
           </Pressable>
