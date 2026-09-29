@@ -1,5 +1,7 @@
 import React from 'react';
 import { Platform, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { canDrawOverlays } from '../../src/native/overlay';
 import { ensureNotificationPermission } from '../../src/native/notifications';
 import { GameState, useStore } from '../../src/state/store';
 
@@ -7,8 +9,13 @@ type BoolKey = 'widgetEnabled' | 'overlayEnabled' | 'overlayMotion' | 'notificat
 
 export default function SettingsScreen() {
   const store = useStore();
+  const router = useRouter();
   const set = (k: BoolKey) => async (v: boolean) => {
     if (k === 'notificationsEnabled' && v && !(await ensureNotificationPermission())) return;
+    if (k === 'overlayEnabled' && v && !canDrawOverlays()) {
+      router.push('/overlay-permission'); // 권한 안내 → 허용되면 자동으로 켜짐
+      return;
+    }
     store.update({ [k]: v } as Partial<GameState>);
   };
   const Row = ({ k, label, desc }: { k: BoolKey; label: string; desc: string }) => (

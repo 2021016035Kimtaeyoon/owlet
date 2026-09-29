@@ -2,6 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Character, STARTER_CHARACTER_ID, rollHatch } from '../data/characters';
 import { CONFIG } from '../data/config';
+import { AppState } from 'react-native';
+import { applyOverlay, consumeOverlayOffRequest } from '../native/overlay';
 import { syncExternalState } from '../native/externalState';
 import { ensureNotificationPermission, scheduleLetterNotification } from '../native/notifications';
 import { FRIENDS } from '../data/templates';
@@ -179,6 +181,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (ready) syncExternalState(state);
   }, [ready, state]);
+
+  useEffect(() => {
+    if (ready) applyOverlay(state.overlayEnabled);
+  }, [ready, state.overlayEnabled]);
+
+  // 오버레이 메뉴에서 끄기를 눌렀다면 앱이 다시 열릴 때 설정에 반영
+  useEffect(() => {
+    const check = () => {
+      if (consumeOverlayOffRequest()) update({ overlayEnabled: false });
+    };
+    check();
+    const sub = AppState.addEventListener('change', (s) => s === 'active' && check());
+    return () => sub.remove();
+  }, [update]);
 
   const value = useMemo(
     () => ({ ...state, ready, update, sendLetter, markRead, startIncubation, hatch }),
