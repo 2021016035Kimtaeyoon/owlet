@@ -8,7 +8,9 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StoreProvider>
         <StatusBar style="dark" />
-        <Stack screenOptions={{ headerShown: false }} />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="letter/[id]" options={{ presentation: 'modal' }} />
+        </Stack>
       </StoreProvider>
     </GestureHandlerRootView>
   );

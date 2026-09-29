@@ -9,7 +9,8 @@ import { useStore } from '../../src/state/store';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { mainId, birdMode, ready, update } = useStore();
+  const { mainId, birdMode, ready, update, letters } = useStore();
+  const unread = letters.find((l) => l.direction === 'received' && !l.read);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [menuOpen, setMenuOpen] = useState(false);
   const character = getCharacter(mainId);
@@ -33,7 +34,11 @@ export default function HomeScreen() {
             height={size.h}
             nest={getNestPos(size.w, size.h)}
             onLongPress={() => setMenuOpen(true)}
-            onTap={() => birdMode === 'rest' && update({ birdMode: 'fly' })}
+            holdingLetter={!!unread}
+            onTap={() => {
+              if (unread) router.push(`/letter/${unread.id}`);
+              else if (birdMode === 'rest') update({ birdMode: 'fly' });
+            }}
           />
           {birdMode === 'hidden' && (
             <Pressable style={styles.callBtn} onPress={() => update({ birdMode: 'fly' })}>
