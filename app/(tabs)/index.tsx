@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { BirdMenu } from '../../src/components/BirdMenu';
 import { FlyingBird } from '../../src/components/FlyingBird';
 import { HomeScene, getNestPos } from '../../src/components/HomeScene';
@@ -9,7 +9,7 @@ import { useStore } from '../../src/state/store';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { mainId, birdMode, ready, update, letters } = useStore();
+  const { mainId, birdMode, ready, update, letters, eggs, eggNotice, incubatorStartedAt } = useStore();
   const unread = letters.find((l) => l.direction === 'received' && !l.read);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [menuOpen, setMenuOpen] = useState(false);
@@ -18,7 +18,7 @@ export default function HomeScreen() {
   const menu = [
     { label: '🙈 숨기기', onPress: () => update({ birdMode: 'hidden' }) },
     { label: '🪹 구석에서 쉬기', onPress: () => update({ birdMode: 'rest' }) },
-    { label: '🥚 부화장치', onPress: () => Alert.alert('부화장치', '3단계에서 구현됩니다.') },
+    { label: '🥚 부화장치', onPress: () => router.push('/incubator') },
     { label: '📖 도감', onPress: () => router.push('/dex') },
   ];
 
@@ -40,6 +40,19 @@ export default function HomeScreen() {
               else if (birdMode === 'rest') update({ birdMode: 'fly' });
             }}
           />
+          {eggNotice && (
+            <Pressable
+              style={styles.notice}
+              onPress={() => { update({ eggNotice: false }); router.push('/incubator'); }}
+            >
+              <Text style={styles.callText}>🥚 새가 알을 물어왔어요! (탭)</Text>
+            </Pressable>
+          )}
+          {(eggs > 0 || incubatorStartedAt) && (
+            <Pressable style={styles.eggBadge} onPress={() => router.push('/incubator')}>
+              <Text style={styles.callText}>🥚 {eggs}{incubatorStartedAt ? ' ⏳' : ''}</Text>
+            </Pressable>
+          )}
           {birdMode === 'hidden' && (
             <Pressable style={styles.callBtn} onPress={() => update({ birdMode: 'fly' })}>
               <Text style={styles.callText}>{character.emoji} 새 부르기</Text>
@@ -57,6 +70,14 @@ const styles = StyleSheet.create({
   callBtn: {
     position: 'absolute', bottom: 24, alignSelf: 'center',
     backgroundColor: '#FFFDF5', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 24,
+  },
+  notice: {
+    position: 'absolute', top: 56, alignSelf: 'center',
+    backgroundColor: '#FFF3B0', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 20,
+  },
+  eggBadge: {
+    position: 'absolute', top: 56, left: 16,
+    backgroundColor: '#FFFDF5', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 16,
   },
   callText: { fontSize: 18, color: '#4A3B2A' },
 });

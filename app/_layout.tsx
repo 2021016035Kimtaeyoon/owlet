@@ -10,6 +10,7 @@ export default function RootLayout() {
         <StatusBar style="dark" />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="letter/[id]" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="incubator" options={{ presentation: 'modal' }} />
         </Stack>
       </StoreProvider>
     </GestureHandlerRootView>

@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { STARTER_CHARACTER_ID } from '../data/characters';
+import { Character, STARTER_CHARACTER_ID, rollHatch } from '../data/characters';
 import { CONFIG } from '../data/config';
 import { FRIENDS } from '../data/templates';
 
@@ -21,6 +21,11 @@ export interface Letter {
 }
 
 export interface GameState {
+  eggs: number;
+  /** 부화장치에 알이 들어간 시각 (없으면 비어 있음) */
+  incubatorStartedAt: number | null;
+  /** 새가 알을 물어왔다는 안내를 홈에서 보여줄지 */
+  eggNotice: boolean;
   letters: Letter[];
   ownedIds: string[];
   mainId: string;
@@ -28,6 +33,9 @@ export interface GameState {
 }
 
 const DEFAULT_STATE: GameState = {
+  eggs: 0,
+  incubatorStartedAt: null,
+  eggNotice: false,
   letters: [],
   ownedIds: [STARTER_CHARACTER_ID],
   mainId: STARTER_CHARACTER_ID,
@@ -41,10 +49,14 @@ interface Store extends GameState {
   update: (patch: Partial<GameState>) => void;
   sendLetter: (input: { friendId: string; templateId: string; text: string; imageUri?: string }) => void;
   markRead: (id: string) => void;
+  startIncubation: () => void;
+  /** 부화 완료 시 결과 캐릭터를 돌려준다 */
+  hatch: () => Character | null;
 }
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
+
 
 const Ctx = createContext<Store | null>(null);
 
@@ -85,7 +97,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         createdAt: Date.now(),
         read: false,
       };
-      update({ letters: [reply, ...cur.letters.map((l) => (l.id === id ? { ...l, replied: true } : l))] });
+      const dropped = Math.random() < CONFIG.egg.dropChance;
+      update({
+        letters: [reply, ...cur.letters.map((l) => (l.id === id ? { ...l, replied: true } : l))],
+        ...(dropped ? { eggs: cur.eggs + 1, eggNotice: true } : {}),
+      });
     },
     [update],
   );
@@ -116,7 +132,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         read: true,
         replyDueAt: Date.now() + rand(CONFIG.letter.replyDelayMinMs, CONFIG.letter.replyDelayMaxMs),
       };
-      update({ letters: [l, ...stateRef.current.letters] });
+      const cur = stateRef.current;
+      const dropped = Math.random() < CONFIG.egg.dropChance;
+      update({ letters: [l, ...cur.letters], ...(dropped ? { eggs: cur.eggs + 1, eggNotice: true } : {}) });
       schedule(l);
     },
     [update, schedule],
@@ -127,9 +145,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [update],
   );
 
+  const startIncubation = useCallback(() => {
+    const cur = stateRef.current;
+    if (cur.eggs < 1 || cur.incubatorStartedAt) return;
+    update({ eggs: cur.eggs - 1, incubatorStartedAt: Date.now() });
+  }, [update]);
+  const hatch = useCallback((): Character | null => {
+    const cur = stateRef.current;
+    if (!cur.incubatorStartedAt || Date.now() - cur.incubatorStartedAt < CONFIG.egg.hatchDurationMs) return null;
+    const c = rollHatch();
+    update({
+      incubatorStartedAt: null,
+      ownedIds: cur.ownedIds.includes(c.id) ? cur.ownedIds : [...cur.ownedIds, c.id],
+    });
+    return c;
+  }, [update]);
+
   const value = useMemo(
-    () => ({ ...state, ready, update, sendLetter, markRead }),
-    [state, ready, update, sendLetter, markRead],
+    () => ({ ...state, ready, update, sendLetter, markRead, startIncubation, hatch }),
+    [state, ready, update, sendLetter, markRead, startIncubation, hatch],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
