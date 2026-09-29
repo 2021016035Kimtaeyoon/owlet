@@ -7,9 +7,20 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "plugins": ["expo-router"],
-    "experiments": { "typedRoutes": true },
-    "ios": { "supportsTablet": false, "bundleIdentifier": "com.owlet.app" },
-    "android": { "package": "com.owlet.app" }
+    "plugins": [
+      "expo-router",
+      "expo-notifications",
+      "./plugins/withOwletNative"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.owlet.app"
+    },
+    "android": {
+      "package": "com.owlet.app"
+    }
   }
 }

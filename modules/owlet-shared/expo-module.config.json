@@ -1,0 +1,5 @@
+{
+  "platforms": ["android", "apple"],
+  "apple": { "modules": ["OwletSharedModule"] },
+  "android": { "modules": ["expo.modules.owletshared.OwletSharedModule"] }
+}

@@ -19,4 +19,14 @@ npx expo start      # QR을 Expo Go로 스캔
 
 ## 진행 상황
 - [x] 1단계 홈 화면
-- [x] 2단계 편지 · [x] 3단계 부화/도감 · [ ] 4~7단계 앱 밖 연동
+- [x] 2단계 편지 · [x] 3단계 부화/도감 · [x] 4단계 앱 밖 연동 준비 · [ ] 5~7단계
+
+## 4단계 이후 (development build)
+```
+npx expo prebuild        # ios/ android/ 생성 (config plugin이 권한·App Group 자동 적용)
+npx expo run:android     # 또는 npx expo run:ios (Mac)
+```
+- `modules/owlet-shared` : 공유 상태 네이티브 모듈 (Android SharedPreferences / iOS App Group UserDefaults)
+- `src/native/externalState.ts` : `syncExternalState` (저장 + 위젯 갱신)
+- `plugins/withOwletNative.js` : 권한·App Group 설정
+- 딥링크: `owlet://open` → 편지 있으면 편지함, 없으면 홈

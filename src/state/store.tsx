@@ -2,6 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Character, STARTER_CHARACTER_ID, rollHatch } from '../data/characters';
 import { CONFIG } from '../data/config';
+import { syncExternalState } from '../native/externalState';
+import { ensureNotificationPermission, scheduleLetterNotification } from '../native/notifications';
 import { FRIENDS } from '../data/templates';
 
 export type BirdMode = 'fly' | 'rest' | 'hidden';
@@ -21,6 +23,10 @@ export interface Letter {
 }
 
 export interface GameState {
+  widgetEnabled: boolean;
+  overlayEnabled: boolean;
+  overlayMotion: boolean;
+  notificationsEnabled: boolean;
   eggs: number;
   /** 부화장치에 알이 들어간 시각 (없으면 비어 있음) */
   incubatorStartedAt: number | null;
@@ -33,6 +39,10 @@ export interface GameState {
 }
 
 const DEFAULT_STATE: GameState = {
+  widgetEnabled: true,
+  overlayEnabled: false,
+  overlayMotion: true,
+  notificationsEnabled: true,
   eggs: 0,
   incubatorStartedAt: null,
   eggNotice: false,
@@ -136,6 +146,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const dropped = Math.random() < CONFIG.egg.dropChance;
       update({ letters: [l, ...cur.letters], ...(dropped ? { eggs: cur.eggs + 1, eggNotice: true } : {}) });
       schedule(l);
+      if (cur.notificationsEnabled && l.replyDueAt) {
+        const f = FRIENDS.find((x) => x.id === l.friendId) ?? FRIENDS[0];
+        ensureNotificationPermission().then((ok) => { if (ok) scheduleLetterNotification(f.name, l.replyDueAt!); });
+      }
     },
     [update, schedule],
   );
@@ -160,6 +174,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     });
     return c;
   }, [update]);
+
+  // 앱 밖(위젯/오버레이)과 공유하는 상태는 변경 시 한 곳에서 동기화
+  useEffect(() => {
+    if (ready) syncExternalState(state);
+  }, [ready, state]);
 
   const value = useMemo(
     () => ({ ...state, ready, update, sendLetter, markRead, startIncubation, hatch }),
