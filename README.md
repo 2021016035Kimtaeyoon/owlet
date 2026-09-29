@@ -19,7 +19,7 @@ npx expo start      # QR을 Expo Go로 스캔
 
 ## 진행 상황
 - [x] 1단계 홈 화면
-- [x] 2단계 편지 · [x] 3단계 부화/도감 · [x] 4단계 앱 밖 연동 준비 · [x] 5단계 안드로이드 오버레이 · [ ] 6~7단계
+- [x] 2단계 편지 · [x] 3단계 부화/도감 · [x] 4단계 앱 밖 연동 준비 · [x] 5단계 안드로이드 오버레이 · [x] 6단계 Android 위젯 · [x] 7단계 iOS 위젯
 
 ## 4단계 이후 (development build)
 ```
@@ -30,3 +30,5 @@ npx expo run:android     # 또는 npx expo run:ios (Mac)
 - `src/native/externalState.ts` : `syncExternalState` (저장 + 위젯 갱신)
 - `plugins/withOwletNative.js` : 권한·App Group 설정
 - 딥링크: `owlet://open` → 편지 있으면 편지함, 없으면 홈
+
+실기기 확인 항목은 [docs/CHECKLIST.md](docs/CHECKLIST.md) 참고.

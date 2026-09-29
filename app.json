@@ -10,14 +10,20 @@
     "plugins": [
       "expo-router",
       "expo-notifications",
-      "./plugins/withOwletNative"
+      "./plugins/withOwletNative",
+      "@bacons/apple-targets"
     ],
     "experiments": {
       "typedRoutes": true
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.owlet.app"
+      "bundleIdentifier": "com.owlet.app",
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.com.owlet.app"
+        ]
+      }
     },
     "android": {
       "package": "com.owlet.app"
