@@ -44,6 +44,17 @@ class OwletWidgetProvider : AppWidgetProvider() {
       val unread = json?.optInt("unreadCount", 0) ?: 0
       val mode = json?.optString("birdMode", "fly") ?: "fly"
 
+      // 오늘 날짜의 운세 한 줄 (앱이 며칠치를 미리 계산해 둠)
+      val cal = java.util.Calendar.getInstance()
+      val today = String.format("%04d-%02d-%02d", cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH) + 1, cal.get(java.util.Calendar.DAY_OF_MONTH))
+      var fortune = ""
+      json?.optJSONArray("fortunes")?.let { arr ->
+        for (i in 0 until arr.length()) {
+          val o = arr.optJSONObject(i)
+          if (o != null && o.optString("date") == today) fortune = o.optString("text")
+        }
+      }
+
       var pose: Int
       do { pose = Random.nextInt(POSES.size) } while (pose == lastPose && POSES.size > 1)
       lastPose = pose
@@ -61,6 +72,12 @@ class OwletWidgetProvider : AppWidgetProvider() {
       for (id in ids) {
         val v = RemoteViews(context.packageName, R.layout.owlet_widget)
         v.setOnClickPendingIntent(R.id.owlet_root, open)
+        if (enabled && fortune.isNotEmpty()) {
+          v.setTextViewText(R.id.owlet_fortune, fortune)
+          v.setViewVisibility(R.id.owlet_fortune, View.VISIBLE)
+        } else {
+          v.setViewVisibility(R.id.owlet_fortune, View.GONE)
+        }
         if (!enabled || mode == "hidden") {
           v.setTextViewText(R.id.owlet_bird, if (enabled) "🙈" else "💤")
           v.setViewPadding(R.id.owlet_bird, (40 * d).toInt(), (44 * d).toInt(), 0, 0)

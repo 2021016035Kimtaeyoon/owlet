@@ -29,3 +29,5 @@ export const CONFIG2 = {
   shop: { eggPrice: 60, instantHatchPrice: 40, adCoins: 30, coinPackCoins: 200 },
   ad: { countdownSec: 5 },
 } as const;
+
+export const FORTUNE_CONFIG = { notifyHour: 8 } as const; // 매일 운세 알림 시각(시)

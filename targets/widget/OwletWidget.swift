@@ -9,6 +9,7 @@ struct OwletState {
   var unread = 0
   var mode = "fly" // fly | rest | hidden
   var widgetEnabled = true
+  var fortunes: [String: String] = [:] // yyyy-MM-dd → 한 줄 운세
 
   static func load() -> OwletState {
     var s = OwletState()
@@ -20,14 +21,26 @@ struct OwletState {
     s.unread = obj["unreadCount"] as? Int ?? 0
     s.mode = obj["birdMode"] as? String ?? "fly"
     s.widgetEnabled = obj["widgetEnabled"] as? Bool ?? true
+    if let arr = obj["fortunes"] as? [[String: Any]] {
+      for o in arr { if let d = o["date"] as? String, let t = o["text"] as? String { s.fortunes[d] = t } }
+    }
     return s
   }
 }
+
+private let dayFormatter: DateFormatter = {
+  let f = DateFormatter()
+  f.dateFormat = "yyyy-MM-dd"
+  f.locale = Locale(identifier: "en_US_POSIX")
+  return f
+}()
 
 struct OwletEntry: TimelineEntry {
   let date: Date
   let state: OwletState
   let pose: Int // 0...3: 위젯 안에서 새가 놓이는 자리
+  /// 이 엔트리 날짜의 운세 (타임라인이 날짜를 넘어가도 맞는 날의 운세가 나온다)
+  var fortune: String? { state.fortunes[dayFormatter.string(from: date)] }
 }
 
 struct OwletProvider: TimelineProvider {
@@ -70,7 +83,17 @@ struct OwletWidgetView: View {
       ZStack {
         LinearGradient(colors: [Color(red: 0.78, green: 0.93, blue: 0.98), Color(red: 0.61, green: 0.84, blue: 0.96)],
                        startPoint: .top, endPoint: .bottom)
-        VStack { Spacer(); Rectangle().fill(Color(red: 0.42, green: 0.75, blue: 0.35)).frame(height: geo.size.height * 0.2) }
+        VStack {
+          Spacer()
+          ZStack {
+            Rectangle().fill(Color(red: 0.42, green: 0.75, blue: 0.35))
+            if let f = entry.fortune, entry.state.widgetEnabled {
+              Text(f).font(.system(size: 10)).lineLimit(2).multilineTextAlignment(.center)
+                .foregroundColor(Color(red: 0.12, green: 0.24, blue: 0.1)).padding(.horizontal, 6)
+            }
+          }
+          .frame(height: geo.size.height * (entry.fortune == nil ? 0.2 : 0.3))
+        }
 
         if !entry.state.widgetEnabled {
           Text("💤").font(.system(size: birdSize))

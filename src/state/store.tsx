@@ -2,13 +2,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { Character, STARTER_CHARACTER_ID, rollHatch } from '../data/characters';
-import { CONFIG, CONFIG2 } from '../data/config';
+import { CONFIG, CONFIG2, FORTUNE_CONFIG } from '../data/config';
 import {
   DECOR, DEFAULT_DECOR_EQUIPPED, DEFAULT_DECOR_OWNED, DecorSlot, REWARDS, getLocation, rollCollectible,
 } from '../data/items';
+import { FORTUNE_FRIEND, FORTUNE_FRIEND_ID, Profile, dateKey, fortuneLetterText, generateFortune } from '../data/fortune';
 import { FRIENDS, Friend, NEARBY } from '../data/templates';
 import { syncExternalState } from '../native/externalState';
-import { ensureNotificationPermission, scheduleLetterNotification, scheduleNotification } from '../native/notifications';
+import { cancelDailyFortune, ensureNotificationPermission, scheduleDailyFortune, scheduleLetterNotification, scheduleNotification } from '../native/notifications';
 import { applyOverlay, consumeOverlayOffRequest } from '../native/overlay';
 import { makeSerial } from '../native/friendCode';
 
@@ -61,6 +62,10 @@ export interface GameState {
   battleWins: number;
   battleLosses: number;
   claimedRewards: string[];
+  /** 사용자 정보(운세용). 기기 안에만 저장된다 */
+  profile: Profile | null;
+  fortuneEnabled: boolean;
+  lastFortuneDate: string;
 }
 
 const DEFAULT_STATE: GameState = {
@@ -89,6 +94,9 @@ const DEFAULT_STATE: GameState = {
   battleWins: 0,
   battleLosses: 0,
   claimedRewards: [],
+  profile: null,
+  fortuneEnabled: true,
+  lastFortuneDate: '',
 };
 
 const KEY = 'owlet:state:v1';
@@ -115,6 +123,8 @@ interface Store extends GameState {
   claimReward: (id: string) => void;
   /** 부화 타이머를 즉시 완료 상태로 */
   finishIncubation: () => void;
+  /** 오늘의 운세 편지를 (아직 안 왔다면) 받는다 */
+  deliverTodayFortune: () => void;
 }
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -122,7 +132,7 @@ const rand = (a: number, b: number) => a + Math.random() * (b - a);
 const randInt = (a: number, b: number) => Math.floor(rand(a, b + 1));
 
 export const findFriend = (friends: Friend[], id: string): Friend =>
-  friends.find((f) => f.id === id) ?? NEARBY.find((f) => f.id === id) ?? friends[0] ?? FRIENDS[0];
+  (id === FORTUNE_FRIEND_ID ? FORTUNE_FRIEND : undefined) ?? friends.find((f) => f.id === id) ?? NEARBY.find((f) => f.id === id) ?? friends[0] ?? FRIENDS[0];
 
 export const unreadCount = (letters: Letter[]) => letters.filter((l) => l.direction === 'received' && !l.read).length;
 
@@ -380,6 +390,38 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [update],
   );
 
+  // 매일 운세: 사용자 정보가 있으면 하루 한 번 새가 운세 편지를 물어온다
+  const deliverTodayFortune = useCallback(() => {
+    const cur = stateRef.current;
+    const today = dateKey();
+    if (!cur.profile || !cur.fortuneEnabled || cur.lastFortuneDate === today) return;
+    const f = generateFortune(cur.profile);
+    const letter: Letter = {
+      id: uid(),
+      direction: 'received',
+      friendId: FORTUNE_FRIEND_ID,
+      templateId: f.score >= 4 ? 'flower' : f.score <= 2 ? 'night' : 'plain',
+      text: fortuneLetterText(cur.profile, f),
+      createdAt: Date.now(),
+      read: false,
+    };
+    update({ letters: [letter, ...cur.letters], lastFortuneDate: today });
+  }, [update]);
+  useEffect(() => {
+    if (!ready) return;
+    deliverTodayFortune();
+    const sub = AppState.addEventListener('change', (s) => s === 'active' && deliverTodayFortune());
+    return () => sub.remove();
+  }, [ready, deliverTodayFortune, state.profile, state.fortuneEnabled]);
+  useEffect(() => {
+    if (!ready) return;
+    if (state.profile && state.fortuneEnabled && state.notificationsEnabled) {
+      ensureNotificationPermission().then((ok) => { if (ok) scheduleDailyFortune(FORTUNE_CONFIG.notifyHour); });
+    } else {
+      cancelDailyFortune();
+    }
+  }, [ready, state.profile, state.fortuneEnabled, state.notificationsEnabled]);
+
   // 앱 밖(위젯/오버레이)과 공유하는 상태는 변경 시 한 곳에서 동기화
   useEffect(() => {
     if (ready) syncExternalState(state);
@@ -402,11 +444,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(
     () => ({
       ...state, ready, update, sendLetter, markRead, startIncubation, hatch, spendCoins, addCoins, buyDecor,
-      equipDecor, addFriend, feed, startAdventure, claimAdventure, recordBattle, claimReward, finishIncubation,
+      equipDecor, addFriend, feed, startAdventure, claimAdventure, recordBattle, claimReward, finishIncubation, deliverTodayFortune,
     }),
     [
       state, ready, update, sendLetter, markRead, startIncubation, hatch, spendCoins, addCoins, buyDecor,
-      equipDecor, addFriend, feed, startAdventure, claimAdventure, recordBattle, claimReward, finishIncubation,
+      equipDecor, addFriend, feed, startAdventure, claimAdventure, recordBattle, claimReward, finishIncubation, deliverTodayFortune,
     ],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

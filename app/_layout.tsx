@@ -22,6 +22,7 @@ export default function RootLayout() {
           <Stack.Screen name="letter/[id]" options={{ presentation: 'modal' }} />
           <Stack.Screen name="incubator" options={{ presentation: 'modal' }} />
           <Stack.Screen name="overlay-permission" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="fortune" options={{ presentation: 'modal' }} />
           <Stack.Screen name="hub" options={{ presentation: 'modal' }} />
           <Stack.Screen name="adventure" options={{ presentation: 'modal' }} />
           <Stack.Screen name="decorate" options={{ presentation: 'modal' }} />

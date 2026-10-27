@@ -6,6 +6,7 @@ import { REWARDS } from '../src/data/items';
 import { rewardInput, useStore } from '../src/state/store';
 
 const ENTRIES: { label: string; emoji: string; href: Href; desc: string }[] = [
+  { label: '오늘의 운세', emoji: '🔮', href: '/fortune', desc: '새가 물어오는 운세' },
   { label: '모험', emoji: '🧭', href: '/adventure', desc: '새를 탐험 보내기' },
   { label: '꾸미기', emoji: '🎨', href: '/decorate', desc: '배경·집·소품' },
   { label: '배틀', emoji: '⚔️', href: '/battle', desc: '자동 대결' },

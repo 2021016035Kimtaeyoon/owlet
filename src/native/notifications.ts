@@ -50,3 +50,23 @@ export async function scheduleNotification(title: string, body: string, at: numb
     console.warn('notification schedule failed', e);
   }
 }
+
+const DAILY_ID = 'owlet-daily-fortune';
+
+/** 매일 정해진 시각에 "운세가 도착했어요" 알림 (앱이 꺼져 있어도 OS가 발송) */
+export async function scheduleDailyFortune(hour: number, minute = 0): Promise<void> {
+  try {
+    await Notifications.cancelScheduledNotificationAsync(DAILY_ID).catch(() => {});
+    await Notifications.scheduleNotificationAsync({
+      identifier: DAILY_ID,
+      content: { title: '오늘의 운세가 도착했어요 🔮', body: '새가 운세를 물어왔어요', data: { url: 'owlet://open' } },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour, minute, channelId: 'letters' },
+    });
+  } catch (e) {
+    console.warn('daily fortune schedule failed', e);
+  }
+}
+
+export async function cancelDailyFortune(): Promise<void> {
+  try { await Notifications.cancelScheduledNotificationAsync(DAILY_ID); } catch {}
+}

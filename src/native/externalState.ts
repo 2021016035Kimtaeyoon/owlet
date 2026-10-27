@@ -1,4 +1,5 @@
 import { getCharacter } from '../data/characters';
+import { upcomingShortFortunes } from '../data/fortune';
 import type { GameState } from '../state/store';
 import Shared from '../../modules/owlet-shared';
 
@@ -11,6 +12,8 @@ export interface ExternalState {
   widgetEnabled: boolean;
   overlayEnabled: boolean;
   overlayMotion: boolean;
+  /** 날짜별 한 줄 운세 (프로필이 없으면 빈 배열) */
+  fortunes: { date: string; text: string }[];
   updatedAt: number;
 }
 
@@ -24,6 +27,7 @@ export function toExternalState(s: GameState): ExternalState {
     widgetEnabled: s.widgetEnabled,
     overlayEnabled: s.overlayEnabled,
     overlayMotion: s.overlayMotion,
+    fortunes: s.profile && s.fortuneEnabled ? upcomingShortFortunes(s.profile) : [],
     updatedAt: Date.now(),
   };
 }
